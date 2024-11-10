@@ -18,10 +18,10 @@ Sonarr plugin UI settings configuration object.
 
 from __future__ import annotations
 
-from typing import ClassVar, List
+from typing import Dict, List, Mapping
 
 from buildarr.config import RemoteMapEntry
-from buildarr.types import BaseEnum
+from buildarr.types import BaseEnum, LowerCaseNonEmptyStr
 from typing_extensions import Self
 
 from ..api import api_get, api_put
@@ -78,6 +78,12 @@ class TimeFormat(BaseEnum):
 
     twelve_hour = "h(:mm)a"
     twentyfour_hour = "HH:mm"
+
+
+class Theme(BaseEnum):
+    auto = "auto"
+    light = "light"
+    dark = "dark"
 
 
 class SonarrUISettingsConfig(SonarrConfigBase):
@@ -163,27 +169,63 @@ class SonarrUISettingsConfig(SonarrConfigBase):
     """
 
     # Style
+    theme: Theme = Theme.auto
+    """
+    The theme to use when browsing the Sonarr UI.
+
+    Values:
+
+    * `auto` (Auto-detect based on browser settings)
+    * `light` (Light-coloured theme)
+    * `dark` (Dark-coloured theme)
+    """
+
     enable_color_impaired_mode: bool = False
     """
     Enable an altered view style to allow colour-impaired users to better distinguish
     colour-coded information.
     """
 
-    _remote_map: ClassVar[List[RemoteMapEntry]] = [
-        ("first_day_of_week", "firstDayOfWeek", {}),
-        ("week_column_header", "calendarWeekColumnHeader", {}),
-        ("short_date_format", "shortDateFormat", {}),
-        ("long_date_format", "longDateFormat", {}),
-        ("time_format", "timeFormat", {}),
-        ("show_relative_dates", "showRelativeDates", {}),
-        ("enable_color_impaired_mode", "enableColorImpairedMode", {}),
-    ]
+    # Language
+    ui_language: LowerCaseNonEmptyStr = "english"  # type: ignore[assignment]
+    """
+    The display language for the Sonarr UI.
+    """
+
+    @classmethod
+    def _get_remote_map(cls, language_ids: Mapping[str, int]) -> List[RemoteMapEntry]:
+        return [
+            ("first_day_of_week", "firstDayOfWeek", {}),
+            ("week_column_header", "calendarWeekColumnHeader", {}),
+            ("short_date_format", "shortDateFormat", {}),
+            ("long_date_format", "longDateFormat", {}),
+            ("time_format", "timeFormat", {}),
+            ("show_relative_dates", "showRelativeDates", {}),
+            ("enable_color_impaired_mode", "enableColorImpairedMode", {}),
+            ("theme", "theme", {}),
+            (
+                "ui_language",
+                "uiLanguage",
+                {
+                    "decoder": lambda v: next(
+                        language_name
+                        for language_name, language_id in language_ids.items()
+                        if language_id == v
+                    ),
+                    "encoder": lambda v: language_ids[v],
+                },
+            ),
+        ]
 
     @classmethod
     def from_remote(cls, secrets: SonarrSecrets) -> Self:
+        language_ids: Dict[str, int] = {
+            api_language["nameLower"]: api_language["id"]
+            for api_language in api_get(secrets, "/api/v3/language")
+        }
         return cls(
             **cls.get_local_attrs(
-                remote_map=cls._remote_map,
+                remote_map=cls._get_remote_map(language_ids=language_ids),
                 remote_attrs=api_get(secrets, "/api/v3/config/ui"),
             ),
         )
@@ -195,10 +237,15 @@ class SonarrUISettingsConfig(SonarrConfigBase):
         remote: Self,
         check_unmanaged: bool = False,
     ) -> bool:
+        language_ids: Dict[str, int] = {
+            api_language["nameLower"]: api_language["id"]
+            for api_language in api_get(secrets, "/api/v3/language")
+        }
+
         updated, remote_attrs = self.get_update_remote_attrs(
             tree=tree,
             remote=remote,
-            remote_map=self._remote_map,
+            remote_map=self._get_remote_map(language_ids=language_ids),
             check_unmanaged=check_unmanaged,
             set_unchanged=True,
         )
