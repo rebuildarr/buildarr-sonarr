@@ -35,7 +35,7 @@ classifiers = [
 ]
 requires-python = ">=3.8"
 dependencies = [
-    "buildarr>=0.8.0b0,<0.9.0",
+    "buildarr @ git+https://github.com/alikhil/buildarr.git@dev",
     "json5>=0.9.7",
 ]
 dynamic = ["version"]
