@@ -220,7 +220,7 @@ class SonarrUISettingsConfig(SonarrConfigBase):
     @classmethod
     def from_remote(cls, secrets: SonarrSecrets) -> Self:
         language_ids: Dict[str, int] = {
-                api_language["name_lower"]: api_language["id"]
+                api_language["nameLower"]: api_language["id"]
                 for api_language in api_get(secrets, "/api/v3/language")
             }
         return cls(
