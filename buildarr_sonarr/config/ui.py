@@ -18,7 +18,7 @@ Sonarr plugin UI settings configuration object.
 
 from __future__ import annotations
 
-from typing import ClassVar, Dict, List, Mapping
+from typing import Dict, List, Mapping
 
 from buildarr.config import RemoteMapEntry
 from buildarr.types import BaseEnum, LowerCaseNonEmptyStr
@@ -220,9 +220,9 @@ class SonarrUISettingsConfig(SonarrConfigBase):
     @classmethod
     def from_remote(cls, secrets: SonarrSecrets) -> Self:
         language_ids: Dict[str, int] = {
-                api_language["nameLower"]: api_language["id"]
-                for api_language in api_get(secrets, "/api/v3/language")
-            }
+            api_language["nameLower"]: api_language["id"]
+            for api_language in api_get(secrets, "/api/v3/language")
+        }
         return cls(
             **cls.get_local_attrs(
                 remote_map=cls._get_remote_map(language_ids=language_ids),
@@ -237,10 +237,15 @@ class SonarrUISettingsConfig(SonarrConfigBase):
         remote: Self,
         check_unmanaged: bool = False,
     ) -> bool:
+        language_ids: Dict[str, int] = {
+            api_language["nameLower"]: api_language["id"]
+            for api_language in api_get(secrets, "/api/v3/language")
+        }
+
         updated, remote_attrs = self.get_update_remote_attrs(
             tree=tree,
             remote=remote,
-            remote_map=self._remote_map,
+            remote_map=self._get_remote_map(language_ids=language_ids),
             check_unmanaged=check_unmanaged,
             set_unchanged=True,
         )
