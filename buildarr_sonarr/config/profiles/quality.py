@@ -376,7 +376,7 @@ class SonarrQualityProfilesSettingsConfig(SonarrConfigBase):
             quality_json["title"]: quality_json["quality"]
             for quality_json in sorted(
                 api_get(secrets, "/api/v3/qualitydefinition"),
-                key=lambda q: q.weight,
+                key=lambda q: q["weight"],
                 reverse=True,
             )
         }
