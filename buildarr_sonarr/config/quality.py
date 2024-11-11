@@ -20,18 +20,19 @@ from __future__ import annotations
 
 import json
 
-from typing import Dict, Optional, cast
+from typing import Any, Dict, Mapping, Optional, cast
 
 from buildarr.config import ConfigTrashIDNotFoundError
 from buildarr.state import state
 from buildarr.types import TrashID
-from pydantic import Field, ValidationInfo, field_validator
+from pydantic import Field, validator
 from typing_extensions import Annotated, Self
 
 from ..api import api_get, api_put
 from ..secrets import SonarrSecrets
 from .types import SonarrConfigBase
 
+QUALITYDEFINITION_PREFERRED_MAX = 1000
 QUALITYDEFINITION_MAX = 1000
 """
 The upper bound for the maximum quality allowed in a quality definition.
@@ -60,7 +61,13 @@ class QualityDefinition(SonarrConfigBase):
     The minimum value is `0`, and the maximum value is `1000`.
     """
 
-    # Note: No 'pref' field like in Radarr until V4
+    preferred: Optional[float] = Field(..., ge=0, le=QUALITYDEFINITION_PREFERRED_MAX)
+    """
+    The maximum allowed bitrate for a quality level, in megabytes per minute (MB/min).
+
+    Must be set at least 1MB/min higher than `min`, and 1MB/min lower than `max`.
+    If set to `null` or `1000`, prefer the highest possible bitrate.
+    """
 
     max: Optional[Annotated[float, Field(ge=1, le=QUALITYDEFINITION_MAX)]]
     """
@@ -72,20 +79,48 @@ class QualityDefinition(SonarrConfigBase):
     If not set to `None`, the minimum value is `1`, and the maximum value is `1000`.
     """
 
-    @field_validator("max")
-    @classmethod
-    def validate_max(cls, value: Optional[float], info: ValidationInfo) -> Optional[float]:
-        quality_min: float = info.data["min"]
-        if value is not None:
-            quality_max = min(value, QUALITYDEFINITION_MAX)
-            if quality_max >= QUALITYDEFINITION_MAX:
-                value = None
-        else:
-            quality_max = QUALITYDEFINITION_MAX
-        if (quality_max - quality_min) < 1:
-            raise ValueError(
-                f"'max' ({quality_max}) not greater than 'min' ({quality_min}) by at least 1",
-            )
+    @validator("preferred")
+    def validate_preferred(
+        cls,
+        value: Optional[float],
+        values: Mapping[str, Any],
+    ) -> Optional[float]:
+        if value is None or value >= QUALITYDEFINITION_PREFERRED_MAX:
+            return None
+        try:
+            quality_min: float = values["min"]
+            if (value - quality_min) < 1:
+                raise ValueError(
+                    f"'preferred' ({value}) is not at least 1 greater than 'min' ({quality_min})",
+                )
+        except KeyError:
+            # `min` only doesn't exist when it failed type validation.
+            # If it doesn't exist, skip validation that uses it.
+            pass
+        return value
+
+    @validator("max")
+    def validate_max(
+        cls,
+        value: Optional[float],
+        values: Mapping[str, Any],
+    ) -> Optional[float]:
+        if value is None or value >= QUALITYDEFINITION_MAX:
+            return None
+        try:
+            try:
+                quality_preferred = float(values["preferred"])
+            except TypeError:
+                quality_preferred = QUALITYDEFINITION_PREFERRED_MAX
+            if (value - quality_preferred) < 1:
+                raise ValueError(
+                    f"'max' ({value}) is not "
+                    f"at least 1 greater than 'preferred' ({quality_preferred})",
+                )
+        except KeyError:
+            # `preferred` only doesn't exist when it failed type validation.
+            # If it doesn't exist, skip validation that uses it.
+            pass
         return value
 
 
@@ -104,6 +139,7 @@ class SonarrQualitySettingsConfig(SonarrConfigBase):
           definitions:
             Bluray-480p: # "Quality" column name (not "Title")
               min: 2
+              preferred: null # Max preferred
               max: 100
             # Add additional override quality definitions here
     ```
@@ -157,6 +193,7 @@ class SonarrQualitySettingsConfig(SonarrConfigBase):
                             self.definitions[definition_name] = QualityDefinition(
                                 title=None,
                                 min=definition_json["min"],
+                                preferred=definition_json["preferred"],
                                 max=definition_json["max"],
                             )
                     return
@@ -175,6 +212,7 @@ class SonarrQualitySettingsConfig(SonarrConfigBase):
                         else None
                     ),
                     min=definition_json["minSize"],
+                    preferred=definition_json["preferredSize"],
                     max=definition_json.get("maxSize", None),
                 )
                 for definition_json in api_get(secrets, "/api/v3/qualitydefinition")
@@ -204,6 +242,7 @@ class SonarrQualitySettingsConfig(SonarrConfigBase):
                 remote_map=[
                     ("title", "title", {"encoder": lambda v: v or definition_name}),
                     ("min", "minSize", {}),
+                    ("preferred", "preferredSize", {}),
                     ("max", "maxSize", {}),
                 ],
             )
