@@ -32,7 +32,7 @@ from ..api import api_get, api_put
 from ..secrets import SonarrSecrets
 from .types import SonarrConfigBase
 
-QUALITYDEFINITION_MAX = 400
+QUALITYDEFINITION_MAX = 1000
 """
 The upper bound for the maximum quality allowed in a quality definition.
 """
@@ -57,7 +57,7 @@ class QualityDefinition(SonarrConfigBase):
     The minimum Megabytes per Minute (MB/min) a quality can have.
     Must be set at least 1MB/min lower than `max`.
 
-    The minimum value is `0`, and the maximum value is `399`.
+    The minimum value is `0`, and the maximum value is `1000`.
     """
 
     # Note: No 'pref' field like in Radarr until V4
@@ -67,9 +67,9 @@ class QualityDefinition(SonarrConfigBase):
     The maximum Megabytes per Minute (MB/min) a quality can have.
     Must be set at least 1MB/min higher than `min`.
 
-    If set to `None` or `400`, the maximum bit rate will be unlimited.
+    If set to `None` or `1000`, the maximum bit rate will be unlimited.
 
-    If not set to `None`, the minimum value is `1`, and the maximum value is `400`.
+    If not set to `None`, the minimum value is `1`, and the maximum value is `1000`.
     """
 
     @field_validator("max")
