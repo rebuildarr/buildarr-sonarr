@@ -5,7 +5,7 @@
 groups = ["default", "docs", "lint", "test"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:3e401722b97b02f3d07b2f0b1de4b3b0aa4db448b0d23995c7a6652ece1d2810"
+content_hash = "sha256:54203b88e02219a751ed5efd1a05de03c4b3c6a5d9a3e817e12f8072e145373c"
 
 [[metadata.targets]]
 requires_python = ">=3.8"
@@ -1049,7 +1049,7 @@ name = "python-dateutil"
 version = "2.9.0.post0"
 requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
 summary = "Extensions to the standard Python datetime module"
-groups = ["docs"]
+groups = ["default", "docs"]
 dependencies = [
     "six>=1.5",
 ]
@@ -1193,10 +1193,26 @@ name = "six"
 version = "1.16.0"
 requires_python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
 summary = "Python 2 and 3 compatibility utilities"
-groups = ["docs"]
+groups = ["default", "docs"]
 files = [
     {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
     {file = "six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},
+]
+
+[[package]]
+name = "sonarr-py"
+version = "1.0.2"
+summary = "Sonarr"
+groups = ["default"]
+dependencies = [
+    "pydantic>=2",
+    "python-dateutil>=2.8.2",
+    "typing-extensions>=4.7.1",
+    "urllib3<3.0.0,>=1.25.3",
+]
+files = [
+    {file = "sonarr_py-1.0.2-py3-none-any.whl", hash = "sha256:84a7e639dba84939a5febb21b3e416df850602444bdddf51afe716f8d6741b3e"},
+    {file = "sonarr_py-1.0.2.tar.gz", hash = "sha256:a7da49b54374a3b87c606429f85803212530755e1bd3aa2280431e429f28c300"},
 ]
 
 [[package]]
