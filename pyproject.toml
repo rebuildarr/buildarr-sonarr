@@ -39,7 +39,7 @@ dependencies = [
     "json5>=0.9.7",
     "sonarr-py>=1.0.2",
 ]
-version = "0.7.0b0"
+version = "0.7.0"
 
 [project.urls]
 Homepage = "https://buildarr.github.io"
