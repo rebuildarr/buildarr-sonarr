@@ -37,6 +37,7 @@ requires-python = ">=3.8"
 dependencies = [
     "buildarr @ git+https://github.com/rebuildarr/buildarr.git@v0.8.1",
     "json5>=0.9.7",
+    "sonarr-py>=1.0.2",
 ]
 version = "0.7.0b0"
 
