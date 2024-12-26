@@ -1,8 +1,15 @@
 ## v0.7.0 (2024-12-26)
 
+### Add
+
+- `sonar_api_client` contextmanager to handle API requests
+- `custom_formats` field support for `QualityProfile`
+- `theme` and `ui_language` fields support for `UISettings`
+
 ### Fix
 
 - bunch of bugs and compatibility issues
+- increase `QUALITYDEFINITION_MAX` to 1000
 
 ## v0.7.0b0 (2024-05-05)
 
