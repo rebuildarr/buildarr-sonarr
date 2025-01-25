@@ -33,6 +33,15 @@ from .types import SonarrConfigBase
 logger = getLogger(__name__)
 
 
+class ColonReplacement(BaseEnum):
+    delete = 0
+    dash = 1
+    space_dash = 2
+    space_dash_space = 3
+    smart = 4
+    custom = 5
+
+
 class MultiEpisodeStyle(BaseEnum):
     """
     Multi-episode style enumeration.
@@ -141,6 +150,20 @@ class SonarrMediaManagementSettingsConfig(SonarrConfigBase):
     Replace illegal characters within the file name.
 
     If set to `False`, Sonarr will remove them instead.
+    """
+
+    colon_replacement: ColonReplacement = ColonReplacement.delete
+    """
+    Replace or delete full colons (`:`) in release titles with alternative characters
+    when saving files.
+
+    Values:
+
+    * `delete` - Delete without replacement (e.g. `One:Two` → `OneTwo`) (default)
+    * `dash` - Replace with a dash (e.g. `One:Two` → `One-Two`)
+    * `smart` - Replace with a dash or space dash depending on name (e.g. `One:Two` → `One-Two`)
+    * `dash-space` - Replace with a dash and a space (e.g. `One:Two` → `One- Two`)
+    * `space-dash-space` - Replace with a space-separated dash (e.g. `One:Two` → `One - Two`)
     """
 
     standard_episode_format: NonEmptyStr = (
@@ -463,6 +486,7 @@ class SonarrMediaManagementSettingsConfig(SonarrConfigBase):
         ("season_folder_format", "seasonFolderFormat", {}),
         ("specials_folder_format", "specialsFolderFormat", {}),
         ("multiepisode_style", "multiEpisodeStyle", {}),
+        ("colon_replacement", "colonReplacementFormat", {}),
     ]
     _mediamanagement_remote_map: ClassVar[List[RemoteMapEntry]] = [
         # Folders

@@ -39,6 +39,7 @@ class AuthenticationMethod(BaseEnum):
     none = "none"
     basic = "basic"
     form = "forms"
+    external = "external"
 
 
 class CertificateValidation(BaseEnum):
@@ -188,7 +189,7 @@ class SecurityGeneralSettings(GeneralSettings):
     Sonarr instance security (authentication) settings.
     """
 
-    authentication: AuthenticationMethod = AuthenticationMethod.none
+    authentication: AuthenticationMethod = AuthenticationMethod.external
     """
     Authentication method for logging into Sonarr.
     By default, do not require authentication.
@@ -198,6 +199,15 @@ class SecurityGeneralSettings(GeneralSettings):
     * `none` - No authentication
     * `basic` - Authentication using HTTP basic auth (browser popup)
     * `form` - Authentication using a login page
+    * `external` - External authentication using a reverse proxy
+
+    !!! warning
+
+        When the authentication method is set to `none` or `external`,
+        **authentication is disabled within Sonarr itself.**
+
+        **Make sure access to Sonarr is secured**, either by using a reverse proxy with
+        forward authentication configured, or not exposing Sonarr to the public Internet.
 
     Requires a restart of Sonarr to take effect.
     """
