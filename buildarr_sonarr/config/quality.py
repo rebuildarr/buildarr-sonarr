@@ -19,7 +19,6 @@ Sonarr plugin quality settings configuration object.
 from __future__ import annotations
 
 import json
-
 from typing import Dict, Optional, cast
 
 from buildarr.config import ConfigTrashIDNotFoundError
@@ -32,7 +31,10 @@ from ..api import api_get, api_put
 from ..secrets import SonarrSecrets
 from .types import SonarrConfigBase
 
-QUALITYDEFINITION_MAX = 400
+QUALITYDEFINITION_MIN_MAX = 1998
+QUALITYDEFINITION_PREFERRED_MAX = 1999
+QUALITYDEFINITION_MAX = 2000
+
 """
 The upper bound for the maximum quality allowed in a quality definition.
 """
@@ -52,12 +54,20 @@ class QualityDefinition(SonarrConfigBase):
     will also be `Bluray-480p`)
     """
 
-    min: Annotated[float, Field(ge=0, le=QUALITYDEFINITION_MAX - 1)]
+    min: Annotated[float, Field(ge=0, le=QUALITYDEFINITION_MIN_MAX)]
     """
     The minimum Megabytes per Minute (MB/min) a quality can have.
     Must be set at least 1MB/min lower than `max`.
 
     The minimum value is `0`, and the maximum value is `399`.
+    """
+
+    preferred: Annotated[float, Field(..., ge=0, le=QUALITYDEFINITION_PREFERRED_MAX)]
+    """
+    The maximum allowed bitrate for a quality level, in megabytes per minute (MB/min).
+
+    Must be set at least 1MB/min higher than `min`, and 1MB/min lower than `max`.
+    If set to `null` or `399`, prefer the highest possible bitrate.
     """
 
     # Note: No 'pref' field like in Radarr until V4
@@ -71,6 +81,8 @@ class QualityDefinition(SonarrConfigBase):
 
     If not set to `None`, the minimum value is `1`, and the maximum value is `400`.
     """
+
+    preferred: Annotated[float, Field(ge=0)]
 
     @field_validator("max")
     @classmethod
@@ -157,6 +169,7 @@ class SonarrQualitySettingsConfig(SonarrConfigBase):
                             self.definitions[definition_name] = QualityDefinition(
                                 title=None,
                                 min=definition_json["min"],
+                                preferred=definition_json["preferred"],
                                 max=definition_json["max"],
                             )
                     return
@@ -204,6 +217,7 @@ class SonarrQualitySettingsConfig(SonarrConfigBase):
                 remote_map=[
                     ("title", "title", {"encoder": lambda v: v or definition_name}),
                     ("min", "minSize", {}),
+                    ("preferred", "preferredSize", {}),
                     ("max", "maxSize", {}),
                 ],
             )
