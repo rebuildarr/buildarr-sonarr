@@ -188,6 +188,7 @@ class SonarrQualitySettingsConfig(SonarrConfigBase):
                         else None
                     ),
                     min=definition_json["minSize"],
+                    preferred=definition_json["preferredSize"],
                     max=definition_json.get("maxSize", None),
                 )
                 for definition_json in api_get(secrets, "/api/v3/qualitydefinition")
